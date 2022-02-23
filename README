@@ -1,0 +1,32 @@
+This layer provides support for cross compiling a cross toolchain that can then run on regular Yocto targets.
+Neither the regular gcc recipe in oe-core, nor sdk cross-canadian recipes offer this (regular recipe only
+supports native compilation; cross-canadian recipes are tightly coupled with the SDK).
+
+The use case is having a compiler on the target machine that can build for a different target machine
+that is perhaps part of the same hardware system. Currently supported target is arm-none-eabi, but
+more can be added.
+
+Maintainers:
+Alexander Kanavin <alex@linutronix.de>
+
+How to use:
+    
+- set up a regular yocto build
+    
+- add to local.conf:
+IMAGE_INSTALL:append = " gcc-arm-none-eabi binutils-arm-none-eabi libgcc-arm-none-eabi-dev"
+    
+This will add a cross-compiler, cross-linker and cross-libgcc to the target image
+    
+- boot an image, and those tools should be able to run and find their supplementary
+files. However a cross-libc needs to be provided separately; without it no useful
+program can be compiled:
+    
+root@qemux86-64:~# cat > test.c
+void main () {
+}
+root@qemux86-64:~# arm-none-eabi-gcc test.c
+/usr/lib/gcc/arm-none-eabi/11.2.0/../../../../arm-none-eabi/bin/ld: cannot find crt0.o: No such file or directory
+/usr/lib/gcc/arm-none-eabi/11.2.0/../../../../arm-none-eabi/bin/ld: cannot find -lc
+collect2: error: ld returned 1 exit status
+
